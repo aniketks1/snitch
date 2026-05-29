@@ -1,0 +1,155 @@
+/* sharedComponents.css - Styles for Reusable Shared Components across Snitch app */
+
+/* Premium Form Input Styling */
+.form-input-container {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  background-color: rgba(9, 9, 11, 0.6);
+  border: 1px solid rgba(63, 63, 70, 0.5);
+  border-radius: 0.75rem;
+  color: #f4f4f5;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-input::placeholder {
+  color: #71717a;
+}
+
+.form-input:focus {
+  border-color: rgba(244, 244, 245, 0.85);
+  background-color: rgba(9, 9, 11, 0.85);
+  box-shadow: 0 0 0 1px rgba(244, 244, 245, 0.15), 
+              0 0 15px rgba(244, 244, 245, 0.05);
+}
+
+.form-input-icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #52525b;
+  transition: color 0.25s ease;
+  pointer-events: none;
+}
+
+.form-input:focus ~ .form-input-icon {
+  color: #f4f4f5;
+}
+
+/* Toggle Visibility Button Styling */
+.form-input-toggle {
+  position: absolute;
+  right: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #52525b;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-input-toggle:hover {
+  color: #e4e4e7;
+  background-color: rgba(39, 39, 42, 0.5);
+}
+
+/* Reusable Premium Button Styling */
+.btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem; /* rounded-lg */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  user-select: none;
+}
+
+/* Full width primary button used in Auth */
+.btn-auth {
+  padding: 0.75rem 1rem; /* py-3 px-4 */
+  background-color: #f4f4f5; /* bg-zinc-100 */
+  color: #09090b; /* text-zinc-950 */
+  font-weight: 700; /* font-bold */
+  font-size: 0.75rem; /* text-xs */
+  letter-spacing: 0.05em; /* tracking-wide */
+  text-transform: uppercase;
+  gap: 0.5rem; /* gap-2 */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+}
+
+@media (min-width: 640px) {
+  .btn-auth {
+    font-size: 0.875rem; /* sm:text-sm */
+  }
+}
+
+.btn-auth:hover {
+  background-color: #e4e4e7; /* bg-zinc-200 */
+  transform: scale(1.01);
+}
+
+.btn-auth:active {
+  transform: scale(0.99);
+}
+
+/* Standard Premium Primary Button */
+.btn-primary {
+  background-color: #f4f4f5; /* bg-zinc-100 */
+  color: #09090b; /* text-zinc-950 */
+  padding: 0.75rem 1.5rem; /* py-3 px-6 */
+  font-weight: 600; /* font-semibold */
+  font-size: 0.875rem; /* text-sm */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+}
+
+.btn-primary:hover {
+  background-color: #e4e4e7; /* bg-zinc-200 */
+  transform: scale(1.02);
+  box-shadow: 0 10px 15px -3px rgba(244, 244, 245, 0.1), 0 4px 6px -2px rgba(244, 244, 245, 0.05); /* hover:shadow-lg hover:shadow-zinc-100/10 */
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+/* Danger Button (Rose variant) */
+.btn-danger {
+  background-color: #e11d48; /* bg-rose-600 */
+  color: #f4f4f5; /* text-zinc-100 */
+  padding: 0.75rem 1.5rem; /* py-3 px-6 */
+  font-weight: 600; /* font-semibold */
+  font-size: 0.875rem; /* text-sm */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+}
+
+.btn-danger:hover {
+  background-color: #f43f5e; /* bg-rose-500 */
+  transform: scale(1.02);
+  box-shadow: 0 10px 15px -3px rgba(225, 29, 72, 0.2), 0 4px 6px -2px rgba(225, 29, 72, 0.1); /* hover:shadow-lg hover:shadow-rose-600/20 */
+}
+
+.btn-danger:active {
+  transform: scale(0.98);
+}
+
+/* Disabled & loading states */
+.btn-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
