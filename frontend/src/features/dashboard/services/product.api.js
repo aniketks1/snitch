@@ -36,3 +36,21 @@ export const getSellerProductsApi = async () => {
 		return error.response.data;
 	}
 };
+
+export const getAllProductsApi = async () => {
+	try {
+		const response = await productApiInstance.get("/");
+		return response.data;
+	} catch (error) {
+		return error.response.data;
+	}
+};
+
+export const getProductDetailsApi = async ({ productId }) => {
+	try {
+		const response = await productApiInstance.get(`/details/${productId}`);
+		return response.data;
+	} catch (error) {
+		return error.response.data;
+	}
+};

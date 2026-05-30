@@ -2,19 +2,22 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Outlet } from "react-router";
 import { useAuth } from "../features/auth/hook/useAuth.js";
+import useProducts from "../features/dashboard/hooks/useSellerProduct.js";
 
 import { useState } from "react";
 
 const App = () => {
 	const { user } = useSelector((state) => state.auth);
-	const { handleGetMe } = useAuth();
 	const [isHydrating, setIsHydrating] = useState(true);
+	const { handleGetMe } = useAuth();
+	const { handleGetAllProducts } = useProducts();
 
 	useEffect(() => {
 		async function initSession() {
 			if (!user) {
 				await handleGetMe();
 			}
+			await handleGetAllProducts();
 			setIsHydrating(false);
 		}
 		initSession();
@@ -29,7 +32,11 @@ const App = () => {
 		);
 	}
 
-	return <Outlet />;
+	return (
+		<>
+			<Outlet />
+		</>
+	);
 };
 
 export default App;

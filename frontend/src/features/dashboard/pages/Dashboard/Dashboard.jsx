@@ -1,14 +1,11 @@
 import { Link } from "react-router";
-import useSellerProduct from "../../hooks/useSellerProduct.js";
-import SellerProductCard from "../../components/SellerProductCard.jsx";
+import ProductCard from "../../components/ProductCard.jsx";
 import { RiShoppingBag3Line, RiVerifiedBadgeLine, RiArrowRightUpLine } from "@remixicon/react";
-import { useEffect } from "react";
 import { useSelector } from "react-redux";
-import { useAuth } from "../../../auth/hook/useAuth.js";
 
 const Dashboard = () => {
 	// Custom Hooks
-	const sellerProducts = useSelector((state) => state.sellerProduct.sellerProducts); // sellerProduct is slice/state & sellerProducts is array
+	const { sellerProducts } = useSelector((state) => state.products); // sellerProduct is slice/state & sellerProducts is array
 
 	return (
 		<div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 animate-fade-in-up">
@@ -59,9 +56,10 @@ const Dashboard = () => {
 					</div>
 					<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
 						{sellerProducts.map((product) => (
-							<SellerProductCard
+							<ProductCard
 								key={product._id}
 								product={product}
+								isSellerMode={true}
 								onEdit={(prod) => alert(`Editing product drop: "${prod.title}"`)}
 								onDelete={(prod) => {
 									if (

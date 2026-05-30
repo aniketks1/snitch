@@ -4,11 +4,11 @@ import useSellerProduct from "../hooks/useSellerProduct.js";
 import { useEffect } from "react";
 
 const DashboardLayout = () => {
-	const { handlerGetSellerProduct } = useSellerProduct();
+	const { handleGetSellerProduct } = useSellerProduct();
 
 	useEffect(() => {
 		async function hydrateDashboard() {
-			await handlerGetSellerProduct();
+			await handleGetSellerProduct();
 		}
 		hydrateDashboard();
 	}, []);

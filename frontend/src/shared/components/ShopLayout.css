@@ -1,0 +1,47 @@
+/* ShopLayout.css - Unified Shop Layout Stylesheet */
+
+.shop-layout-container {
+  min-height: 100vh;
+  background-color: #fafafa;
+  color: #09090b;
+  position: relative;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Glassmorphism Navigation */
+.glass-header {
+  border-bottom: 1px solid rgba(228, 228, 231, 0.6);
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+
+/* Floating Radial Glow Spheres */
+.glow-sphere {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  opacity: 0.55;
+  transition: all 0.5s ease;
+  z-index: 0;
+}
+
+.glow-sphere-1 {
+  top: -10%;
+  right: -5%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(244, 244, 245, 0.8) 0%, rgba(228, 228, 231, 0.2) 100%);
+}
+
+.glow-sphere-2 {
+  bottom: 10%;
+  left: -5%;
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(228, 228, 231, 0.6) 0%, rgba(244, 244, 245, 0.1) 100%);
+}

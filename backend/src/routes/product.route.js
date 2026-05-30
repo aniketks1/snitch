@@ -1,5 +1,10 @@
 import { Router } from "express";
-import { createProduct, getSellerProducts } from "../controllers/product.controller.js";
+import {
+	createProduct,
+	getSellerProducts,
+	getAllProducts,
+	getProductDetails,
+} from "../controllers/product.controller.js";
 import authenticateUser from "../middlewares/auth.middleware.js";
 import multer from "multer";
 import { validateCreateProduct } from "../validator/product.validator.js";
@@ -39,6 +44,13 @@ router.get("/seller", authenticateUser, getSellerProducts);
  * @description Get Seller specific products
  * @access Private (Seller Only)
  */
-// router.get("/public", getAllProducts);
+router.get("/", getAllProducts);
+
+/**
+ * @route GET /api/product/:productId
+ * @description Get product details
+ * @access Public
+ */
+router.get("/details/:productId", getProductDetails);
 
 export default router;

@@ -1,8 +1,13 @@
-import { createProductApi, getSellerProductsApi } from "../services/product.api";
+import {
+	createProductApi,
+	getSellerProductsApi,
+	getAllProductsApi,
+	getProductDetailsApi,
+} from "../services/product.api.js";
 import { useDispatch } from "react-redux";
-import { setSellerProducts } from "../states/product.slice.js";
+import { setProducts, setSellerProducts } from "../states/product.slice.js";
 
-const useSellerProduct = () => {
+const useProducts = () => {
 	const dispatch = useDispatch();
 
 	async function handleCreateProduct({ title, description, priceAmount, priceCurrency, images }) {
@@ -10,13 +15,24 @@ const useSellerProduct = () => {
 		return data.product;
 	}
 
-	async function handlerGetSellerProduct() {
+	async function handleGetSellerProduct() {
 		const data = await getSellerProductsApi();
 		dispatch(setSellerProducts(data.products));
 		return data.products;
 	}
 
-	return { handleCreateProduct, handlerGetSellerProduct };
+	async function handleGetAllProducts() {
+		const data = await getAllProductsApi();
+		dispatch(setProducts(data.products));
+		return data.products;
+	}
+
+	async function handleGetProductDetails({ productId }) {
+		const data = await getProductDetailsApi({ productId });
+		return data.product;
+	}
+
+	return { handleCreateProduct, handleGetSellerProduct, handleGetAllProducts, handleGetProductDetails };
 };
 
-export default useSellerProduct;
+export default useProducts;

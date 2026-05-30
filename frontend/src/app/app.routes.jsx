@@ -1,25 +1,40 @@
 import { createBrowserRouter, Navigate } from "react-router";
+import Protected from "../shared/components/Protected.jsx";
+
+// Layouts
 import App from "./App";
-import NotFound from "./pages/NotFound";
-import Home from "../features/home/pages/Home";
-import Login from "../features/auth/pages/login/Login";
-import Register from "../features/auth/pages/register/Register";
 import AuthLayout from "../features/auth/components/AuthLayout";
 import DashboardLayout from "../features/dashboard/components/DashboardLayout";
+import ShopLayout from "../shared/components/ShopLayout.jsx";
+
+// Page Components
+import Home from "../features/dashboard/pages/Home/Home.jsx";
+import Login from "../features/auth/pages/login/Login";
+import Register from "../features/auth/pages/register/Register";
 import Dashboard from "../features/dashboard/pages/Dashboard/Dashboard";
 import CreateProduct from "../features/dashboard/pages/CreateProduct/CreateProduct";
-
-import Protected from "../shared/components/Protected.jsx";
+import ProductDetails from "../features/dashboard/pages/ProductDetails/ProductDetails";
+import NotFound from "./pages/NotFound";
 
 const router = createBrowserRouter([
 	{
 		path: "/",
 		element: <App />,
 		children: [
-			// home routes
+			// Wrap catalog routes inside the unified ShopLayout
 			{
-				index: true,
-				element: <Home />,
+				path: "",
+				element: <ShopLayout />,
+				children: [
+					{
+						index: true,
+						element: <Home />,
+					},
+					{
+						path: "product/:productId",
+						element: <ProductDetails />,
+					},
+				],
 			},
 
 			// auth routes

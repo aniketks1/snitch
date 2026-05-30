@@ -49,7 +49,7 @@ export const createProduct = async (req, res, _next) => {
 	});
 };
 
-export const getSellerProducts = async (req, res, next) => {
+export const getSellerProducts = async (req, res, _next) => {
 	const seller = req.user;
 	if (seller.role !== "seller")
 		return res.status(401).json({
@@ -63,5 +63,32 @@ export const getSellerProducts = async (req, res, next) => {
 		success: true,
 		message: "Products fetched successfully",
 		products,
+	});
+};
+
+export const getAllProducts = async (_req, res, _next) => {
+	const products = await porductModel.find().lean();
+
+	return res.status(200).json({
+		success: true,
+		message: "Products fetched successfully",
+		products,
+	});
+};
+
+export const getProductDetails = async (req, res, _next) => {
+	const { productId } = req.params;
+	const product = await porductModel.findById(productId).lean();
+
+	if (!product)
+		return res.status(404).json({
+			success: false,
+			message: "Product not found",
+		});
+
+	return res.status(200).json({
+		success: true,
+		message: "Product fetched successfully",
+		product,
 	});
 };
