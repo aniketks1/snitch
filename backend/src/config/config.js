@@ -12,6 +12,8 @@ const requiredEnvVars = [
 	"IMAGEKIT_PRIVATE",
 	"IMAGEKIT_PUBLIC",
 	"IMAGEKIT_ENDPOINT",
+	"RAZORPAY_KEY_ID",
+	"RAZORPAY_KEY_SECRET",
 ];
 
 for (const variable of requiredEnvVars) {
@@ -33,6 +35,8 @@ const config = {
 	IMAGEKIT_PRIVATE: process.env.IMAGEKIT_PRIVATE,
 	IMAGEKIT_PUBLIC: process.env.IMAGEKIT_PUBLIC,
 	IMAGEKIT_ENDPOINT: process.env.IMAGEKIT_ENDPOINT,
+	RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
+	RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
 };
 
 export default config;

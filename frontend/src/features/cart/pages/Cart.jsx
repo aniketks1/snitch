@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router";
+import { useRazorpay } from "../hook/useRazorpay.js";
 import {
 	RiShoppingBag3Line,
 	RiArrowLeftLine,
@@ -19,11 +20,30 @@ const Cart = () => {
 	const navigate = useNavigate();
 	const { handleGetCart, handleAddItem } = useCart();
 	const { items } = useSelector((state) => state.cart || { items: [] });
-	
+
 	const [loading, setLoading] = useState(true);
 	const [checkoutLoading, setCheckoutLoading] = useState(false);
 	const [showSuccessModal, setShowSuccessModal] = useState(false);
 	const [updatingItemId, setUpdatingItemId] = useState(null);
+
+	const { handleCheckout } = useRazorpay();
+	const user = useSelector((state) => state.auth.user); // adjust selector
+	const onCheckout = () => {
+		setCheckoutLoading(true);
+		handleCheckout({
+			userName: user?.name,
+			userEmail: user?.email,
+			userContact: user?.phone || "",
+			onSuccess: (_data) => {
+				setCheckoutLoading(false);
+				setShowSuccessModal(true);
+			},
+			onError: (msg) => {
+				setCheckoutLoading(false);
+				alert(msg);
+			},
+		});
+	};
 
 	const handleQuantityChange = async (productId, variantId, quantityChange) => {
 		setUpdatingItemId(`${productId}-${variantId}`);
@@ -75,18 +95,13 @@ const Cart = () => {
 		return `${currencySymbol}${amount.toLocaleString()}`;
 	};
 
-	const handleCheckout = () => {
-		setCheckoutLoading(true);
-		setTimeout(() => {
-			setCheckoutLoading(false);
-			setShowSuccessModal(true);
-		}, 2000);
-	};
-
 	if (loading) {
 		return (
 			<div className="cart-loading-container">
-				<RiLoader5Line size={32} className="animate-spin text-zinc-800" />
+				<RiLoader5Line
+					size={32}
+					className="animate-spin text-zinc-800"
+				/>
 				<span className="text-xs uppercase tracking-widest font-light text-zinc-500 mt-4">
 					Loading your bag...
 				</span>
@@ -99,13 +114,16 @@ const Cart = () => {
 			<main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center animate-fade-in-up">
 				<div className="max-w-md mx-auto space-y-6">
 					<div className="relative inline-flex items-center justify-center p-6 rounded-full bg-zinc-100 border border-zinc-200/50">
-						<RiShoppingBag3Line size={48} strokeWidth={1} className="text-zinc-400" />
+						<RiShoppingBag3Line
+							size={48}
+							strokeWidth={1}
+							className="text-zinc-400"
+						/>
 					</div>
-					<h2 className="text-2xl font-light uppercase tracking-widest text-zinc-900">
-						Your Bag is Empty
-					</h2>
+					<h2 className="text-2xl font-light uppercase tracking-widest text-zinc-900">Your Bag is Empty</h2>
 					<p className="text-zinc-500 text-sm font-light leading-relaxed max-w-sm mx-auto">
-						There are currently no items in your curation. Explore our drops to discover our latest architectural fits.
+						There are currently no items in your curation. Explore our drops to discover our latest
+						architectural fits.
 					</p>
 					<button
 						onClick={() => navigate("/")}
@@ -123,9 +141,7 @@ const Cart = () => {
 		<main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 animate-fade-in-up">
 			{/* Editorial Header */}
 			<div className="flex flex-col md:flex-row md:items-baseline justify-between border-b border-zinc-200/80 pb-6 mb-10 gap-4">
-				<h1 className="text-3xl font-extralight tracking-tight text-zinc-950 uppercase">
-					Shopping Bag
-				</h1>
+				<h1 className="text-3xl font-extralight tracking-tight text-zinc-950 uppercase">Shopping Bag</h1>
 				<span className="text-xs font-light text-zinc-500 uppercase tracking-widest">
 					{items.length} unique {items.length === 1 ? "design" : "designs"} secured
 				</span>
@@ -141,17 +157,25 @@ const Cart = () => {
 							: item.product?.variants?.find((v) => v._id?.toString() === item.variants?.toString());
 
 						// Resolve correct thumbnail image
-						const itemImage = (selectedVariant && selectedVariant.images?.length > 0)
-							? selectedVariant.images[0].url
-							: (item.product?.images?.length > 0 ? item.product.images[0].url : null);
+						const itemImage =
+							selectedVariant && selectedVariant.images?.length > 0
+								? selectedVariant.images[0].url
+								: item.product?.images?.length > 0
+									? item.product.images[0].url
+									: null;
 
 						// Resolve correct variant label
 						const variantLabel = isBaseProduct
 							? "Original Product"
-							: (selectedVariant?.attributes
-								? Object.entries(selectedVariant.attributes instanceof Map ? Object.fromEntries(selectedVariant.attributes) : selectedVariant.attributes)
-									.map(([k, v]) => `${k}: ${v}`).join(" / ")
-								: "Standard Variant");
+							: selectedVariant?.attributes
+								? Object.entries(
+										selectedVariant.attributes instanceof Map
+											? Object.fromEntries(selectedVariant.attributes)
+											: selectedVariant.attributes,
+									)
+										.map(([k, v]) => `${k}: ${v}`)
+										.join(" / ")
+								: "Standard Variant";
 
 						return (
 							<div
@@ -159,7 +183,7 @@ const Cart = () => {
 								className="flex flex-col sm:flex-row gap-5 p-5 bg-white border border-zinc-200/60 rounded-2xl shadow-xs transition-all duration-300 hover:border-zinc-300/80"
 							>
 								{/* Image Thumbnail Frame */}
-								<div className="relative h-28 w-24 rounded-xl overflow-hidden bg-zinc-50 border border-zinc-100 flex-shrink-0">
+								<div className="relative h-28 w-24 rounded-xl overflow-hidden bg-zinc-50 border border-zinc-100 shrink-0">
 									{itemImage ? (
 										<img
 											src={itemImage}
@@ -168,13 +192,16 @@ const Cart = () => {
 										/>
 									) : (
 										<div className="flex h-full w-full items-center justify-center bg-zinc-100 text-zinc-400">
-											<RiShoppingBag3Line size={20} strokeWidth={1} />
+											<RiShoppingBag3Line
+												size={20}
+												strokeWidth={1}
+											/>
 										</div>
 									)}
 								</div>
 
 								{/* Details Panel */}
-								<div className="flex-grow flex flex-col justify-between py-1 gap-2">
+								<div className="grow flex flex-col justify-between py-1 gap-2">
 									<div>
 										<div className="flex justify-between items-start gap-4">
 											<h3 className="text-base font-light text-zinc-900 uppercase tracking-tight hover:text-zinc-600 transition-colors">
@@ -186,7 +213,7 @@ const Cart = () => {
 												{formatPrice((item.price?.amount || 0) * item.quantity)}
 											</span>
 										</div>
-										
+
 										{/* Variant details pill */}
 										<div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-0.5 rounded-full border border-zinc-200 bg-zinc-50 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
 											{variantLabel}
@@ -204,19 +231,27 @@ const Cart = () => {
 											</span>
 											<div className="flex items-center gap-2.5">
 												<button
-													onClick={() => handleQuantityChange(item.product?._id, item.variants, -1)}
-													disabled={updatingItemId === `${item.product?._id}-${item.variants}`}
+													onClick={() =>
+														handleQuantityChange(item.product?._id, item.variants, -1)
+													}
+													disabled={
+														updatingItemId === `${item.product?._id}-${item.variants}`
+													}
 													className="flex h-7 w-7 items-center justify-center rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-500 hover:text-zinc-800 active:scale-95 disabled:opacity-50 transition-all cursor-pointer select-none"
 													title="Decrease Quantity"
 												>
 													<RiSubtractLine size={10} />
 												</button>
-												<span className="text-sm font-bold text-zinc-800 min-w-[16px] text-center select-none">
+												<span className="text-sm font-bold text-zinc-800 min-w-4 text-center select-none">
 													{item.quantity}
 												</span>
 												<button
-													onClick={() => handleQuantityChange(item.product?._id, item.variants, 1)}
-													disabled={updatingItemId === `${item.product?._id}-${item.variants}`}
+													onClick={() =>
+														handleQuantityChange(item.product?._id, item.variants, 1)
+													}
+													disabled={
+														updatingItemId === `${item.product?._id}-${item.variants}`
+													}
 													className="flex h-7 w-7 items-center justify-center rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-500 hover:text-zinc-800 active:scale-95 disabled:opacity-50 transition-all cursor-pointer select-none"
 													title="Increase Quantity"
 												>
@@ -263,13 +298,16 @@ const Cart = () => {
 
 						{/* Checkout CTA */}
 						<button
-							onClick={handleCheckout}
+							onClick={onCheckout}
 							disabled={checkoutLoading}
 							className="btn-premium-checkout w-full py-4 bg-zinc-950 hover:bg-zinc-800 disabled:bg-zinc-800 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-300 shadow-sm active:scale-98 flex items-center justify-center gap-3 cursor-pointer"
 						>
 							{checkoutLoading ? (
 								<>
-									<RiLoader5Line size={14} className="animate-spin" />
+									<RiLoader5Line
+										size={14}
+										className="animate-spin"
+									/>
 									<span>Verifying Stock...</span>
 								</>
 							) : (
@@ -279,7 +317,10 @@ const Cart = () => {
 
 						{/* Secure shopping details */}
 						<div className="flex items-center gap-2 justify-center text-[10px] text-zinc-400 uppercase tracking-widest font-semibold pt-2">
-							<RiShieldCheckLine size={14} className="text-zinc-800" />
+							<RiShieldCheckLine
+								size={14}
+								className="text-zinc-800"
+							/>
 							<span>Carbon Neutral & SSL Secured</span>
 						</div>
 					</div>
@@ -315,7 +356,8 @@ const Cart = () => {
 						</div>
 
 						<p className="text-zinc-500 text-sm font-light leading-relaxed max-w-xs mx-auto">
-							Thank you for shopping Snitch Studio. Your exclusive selection has been verified and sent for luxury packaging. An notification will be dispatched shortly.
+							Thank you for shopping Snitch Studio. Your exclusive selection has been verified and sent
+							for luxury packaging. An notification will be dispatched shortly.
 						</p>
 
 						<button

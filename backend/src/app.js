@@ -12,6 +12,7 @@ import config from "./config/config.js";
 import authRouter from "./routes/auth.route.js";
 import productRoute from "./routes/product.route.js";
 import cartRouter from "./routes/cart.route.js";
+import orderRouter from "./routes/order.route.js";
 
 const app = express();
 
@@ -52,6 +53,7 @@ passport.use(
 app.use("/api/auth", authRouter);
 app.use("/api/product", productRoute);
 app.use("/api/cart", cartRouter);
+app.use("/api/order", orderRouter);
 
 app.get("/health", (req, res) => {
 	res.status(200).json({
