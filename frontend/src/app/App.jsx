@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { Outlet } from "react-router";
 import { useAuth } from "../features/auth/hook/useAuth.js";
 import useProducts from "../features/dashboard/hooks/useSellerProduct.js";
+import { useCart } from "../features/cart/hook/useCart.js";
 
 import { useState } from "react";
 
@@ -11,11 +12,20 @@ const App = () => {
 	const [isHydrating, setIsHydrating] = useState(true);
 	const { handleGetMe } = useAuth();
 	const { handleGetAllProducts } = useProducts();
+	const { handleGetCart } = useCart();
 
 	useEffect(() => {
 		async function initSession() {
+			let loggedInUser = user;
 			if (!user) {
-				await handleGetMe();
+				loggedInUser = await handleGetMe();
+			}
+			if (loggedInUser) {
+				try {
+					await handleGetCart();
+				} catch (err) {
+					console.error("Error fetching cart on startup:", err);
+				}
 			}
 			await handleGetAllProducts();
 			setIsHydrating(false);

@@ -13,6 +13,8 @@ const Navbar = () => {
 	const location = useLocation();
 	const { user } = useSelector((state) => state.auth);
 	const { handleLogout } = useAuth();
+	const { items } = useSelector((state) => state.cart || { items: [] });
+	const cartCount = items ? items.reduce((acc, item) => acc + item.quantity, 0) : 0;
 
 	const isProductDetails = location.pathname.startsWith("/product/");
 
@@ -60,6 +62,21 @@ const Navbar = () => {
 
 				{/* Dynamic User Authentication Actions */}
 				<div className="flex items-center gap-4">
+					{user && (
+						<Link
+							to="/cart"
+							className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-500 hover:text-zinc-800 transition-all duration-200 cursor-pointer"
+							title="Shopping Bag"
+						>
+							<RiShoppingBag3Line size={14} />
+							{cartCount > 0 && (
+								<span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-zinc-900 text-[8px] font-bold text-white shadow-xs animate-scale">
+									{cartCount}
+								</span>
+							)}
+						</Link>
+					)}
+
 					{user ? (
 						<div className="flex items-center gap-3">
 							<span className="hidden sm:inline text-xs font-light text-zinc-500 tracking-wide">

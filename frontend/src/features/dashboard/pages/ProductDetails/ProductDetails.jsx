@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router";
 import {
 	RiShoppingBag3Line,
@@ -12,15 +11,18 @@ import {
 	RiCheckLine,
 	RiArrowLeftSLine,
 	RiArrowRightSLine,
+	RiStackLine,
 } from "@remixicon/react";
 
 import "./ProductDetails.css";
 import useProducts from "../../hooks/useSellerProduct";
+import { useCart } from "../../../cart/hook/useCart";
 import NotFound from "../../../../app/pages/NotFound";
 
 const ProductDetails = () => {
 	const { productId } = useParams();
 	const { handleGetProductDetails } = useProducts();
+	const { handleAddItem } = useCart();
 	const navigate = useNavigate();
 	const [productDetails, setProductDetails] = useState(null);
 	const [loading, setLoading] = useState(true);
@@ -47,7 +49,7 @@ const ProductDetails = () => {
 	// Local states for interactivity
 	const [activeImageIndex, setActiveImageIndex] = useState(0);
 	const [slideDirection, setSlideDirection] = useState("right");
-	const [selectedSize, setSelectedSize] = useState("M");
+	const [selectedVariantIndex, setSelectedVariantIndex] = useState(null);
 	const [isLiked, setIsLiked] = useState(false);
 	const [openAccordion, setOpenAccordion] = useState("composition");
 	const [isAdding, setIsAdding] = useState(false);
@@ -73,19 +75,122 @@ const ProductDetails = () => {
 	useEffect(() => {
 		setActiveImageIndex(0);
 		setIsAdded(false);
-	}, [productId]);
+		// Auto-select first variant if available
+		if (productDetails?.variants?.length > 0) {
+			setSelectedVariantIndex(0);
+		} else {
+			setSelectedVariantIndex(null);
+		}
+	}, [productId, productDetails]);
 
-	// Simulating luxury Add To Bag action
-	const handleAddToBag = () => {
+	// Derive variant data
+	const baseVariant = useMemo(() => {
+		if (!productDetails) return null;
+		return {
+			_id: productDetails._id,
+			images: productDetails.images || [],
+			stock: 9999,
+			attributes: {
+				Type: "Original",
+			},
+			price: productDetails.price || {
+				amount: productDetails.priceAmount || 0,
+				currency: productDetails.priceCurrency || "INR",
+			},
+		};
+	}, [productDetails]);
+
+	const variants = useMemo(() => {
+		if (!productDetails) return [];
+		const productVariants = productDetails.variants || [];
+		if (baseVariant && productVariants.length > 0) {
+			return [baseVariant, ...productVariants];
+		}
+		return productVariants;
+	}, [productDetails, baseVariant]);
+
+	const hasVariants = variants.length > 0;
+	const selectedVariant = selectedVariantIndex !== null ? variants[selectedVariantIndex] : null;
+
+	// Build unique attribute keys across all variants for selector grouping
+	const attributeKeys = useMemo(() => {
+		if (!hasVariants) return [];
+		const keySet = new Set();
+		variants.forEach((v) => {
+			if (v.attributes) {
+				// attributes can be a Map (serialised as object) or a plain object
+				const attrs = v.attributes instanceof Map ? Object.fromEntries(v.attributes) : v.attributes;
+				Object.keys(attrs).forEach((k) => keySet.add(k));
+			}
+		});
+		return Array.from(keySet);
+	}, [variants, hasVariants]);
+
+	// Helper: get attribute value from a variant
+	const getAttr = (variant, key) => {
+		if (!variant?.attributes) return undefined;
+		const attrs = variant.attributes instanceof Map ? Object.fromEntries(variant.attributes) : variant.attributes;
+		return attrs[key];
+	};
+
+	// Determine which images to display: variant images (if selected and they exist) or product images
+	const displayImages = useMemo(() => {
+		if (selectedVariant && selectedVariant.images && selectedVariant.images.length > 0) {
+			return selectedVariant.images;
+		}
+		return productDetails?.images || [];
+	}, [selectedVariant, productDetails]);
+
+	// Reset active image index when display images change
+	useEffect(() => {
+		setActiveImageIndex(0);
+	}, [displayImages]);
+
+	// Determine active price: selected variant's price or base product price
+	const activePriceAmount = selectedVariant?.price?.amount ?? productDetails?.price?.amount ?? productDetails?.priceAmount ?? 0;
+	const activePriceCurrency = selectedVariant?.price?.currency ?? productDetails?.price?.currency ?? productDetails?.priceCurrency ?? "INR";
+
+	// Active stock (variant-level)
+	const activeStock = selectedVariant?.stock;
+
+	const formatPrice = (amount, currency) => {
+		const symbol =
+			currency === "INR"
+				? "₹"
+				: currency === "USD"
+					? "$"
+					: currency === "EUR"
+						? "€"
+						: currency === "GBP"
+							? "£"
+							: "";
+		return `${symbol}${amount.toLocaleString()}`;
+	};
+
+	// Actual premium Add To Bag action
+	const handleAddToBag = async () => {
 		if (isAdding || isAdded) return;
+
+		const variantId = selectedVariant?._id;
+		if (!variantId) {
+			console.error("Please select a variant.");
+			return;
+		}
+
 		setIsAdding(true);
-		setTimeout(() => {
-			setIsAdding(false);
+		try {
+			await handleAddItem({ productId, variantId, quantity: 1 });
 			setIsAdded(true);
 			setTimeout(() => {
 				setIsAdded(false);
 			}, 3000);
-		}, 1200);
+		} catch (error) {
+			console.error("Failed to add product to cart:", error);
+			const msg = error.response?.data?.message || "Failed to add to cart.";
+			alert(msg);
+		} finally {
+			setIsAdding(false);
+		}
 	};
 
 	// Image slider navigation helpers
@@ -131,27 +236,14 @@ const ProductDetails = () => {
 		setTouchEndX(null);
 	};
 
-	// Local pricing calculation supporting both flat object keys and nested MongoDB schemas
-	const priceAmount = productDetails?.price?.amount ?? productDetails?.priceAmount ?? 0;
-	const priceCurrency = productDetails?.price?.currency ?? productDetails?.priceCurrency ?? "INR";
-
-	const formatPrice = (amount, currency) => {
-		const symbol =
-			currency === "INR"
-				? "₹"
-				: currency === "USD"
-					? "$"
-					: currency === "EUR"
-						? "€"
-						: currency === "GBP"
-							? "£"
-							: "";
-		return `${symbol}${amount.toLocaleString()}`;
-	};
-
 	// Dynamic accordion helper
 	const toggleAccordion = (section) => {
 		setOpenAccordion(openAccordion === section ? null : section);
+	};
+
+	// Handle variant selection
+	const handleSelectVariant = (idx) => {
+		setSelectedVariantIndex(idx);
 	};
 
 	// Render NotFound page if product details fetch returns a 404
@@ -180,7 +272,6 @@ const ProductDetails = () => {
 		);
 	}
 
-	const displayImages = productDetails.images || [];
 	const currentMainImage = getDisplayImage(displayImages[activeImageIndex]);
 
 	return (
@@ -233,7 +324,7 @@ const ProductDetails = () => {
 							{currentMainImage ? (
 								<>
 									<img
-										key={activeImageIndex}
+										key={`${selectedVariantIndex}-${activeImageIndex}`}
 										src={currentMainImage}
 										alt={productDetails.title}
 										className={`main-image ${slideDirection === "right" ? "animate-slide-right" : "animate-slide-left"}`}
@@ -315,8 +406,13 @@ const ProductDetails = () => {
 						{/* Localized Formatted Pricing */}
 						<div className="flex items-baseline gap-2">
 							<span className="text-2xl font-bold text-zinc-950">
-								{formatPrice(priceAmount, priceCurrency)}
+								{formatPrice(activePriceAmount, activePriceCurrency)}
 							</span>
+							{selectedVariant && selectedVariant.price?.amount !== (productDetails?.price?.amount ?? productDetails?.priceAmount) && (
+								<span className="text-sm font-light text-zinc-400 line-through">
+									{formatPrice(productDetails?.price?.amount ?? productDetails?.priceAmount ?? 0, productDetails?.price?.currency ?? productDetails?.priceCurrency ?? "INR")}
+								</span>
+							)}
 							<span className="text-[10px] font-light text-zinc-400 uppercase tracking-wider">
 								VAT / Taxes Included
 							</span>
@@ -354,35 +450,94 @@ const ProductDetails = () => {
 						</div>
 					</div>
 
-					{/* Size Selector Block */}
-					<div className="space-y-4">
-						<div className="flex items-center justify-between">
-							<h3 className="text-[10px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
-								Select Silhouette Size
-							</h3>
-							<button className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500 hover:text-zinc-900 border-b border-zinc-300 pb-0.5 hover:border-zinc-900 transition-all duration-200 cursor-pointer">
-								Sizing Grid
-							</button>
-						</div>
+					{/* ─── Variant Selector ─── */}
+					{hasVariants && (
+						<div className="space-y-4">
+							<div className="flex items-center justify-between">
+								<h3 className="text-[10px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
+									{attributeKeys.length > 0 ? `Select Variant` : "Available Variants"}
+								</h3>
+								{activeStock !== undefined && activeStock !== null && (
+									<span className={`text-[10px] font-semibold uppercase tracking-widest ${activeStock > 0 ? "text-emerald-600" : "text-rose-500"}`}>
+										{activeStock > 0 ? `${activeStock} in stock` : "Out of stock"}
+									</span>
+								)}
+							</div>
 
-						<div className="flex gap-3">
-							{["S", "M", "L", "XL", "XXL"].map((size) => (
-								<button
-									key={size}
-									onClick={() => setSelectedSize(size)}
-									className={`size-btn ${selectedSize === size ? "active" : ""}`}
-								>
-									{size}
-								</button>
-							))}
+							{/* Variant chip selector */}
+							<div className="flex flex-wrap gap-3">
+								{variants.map((variant, vIdx) => {
+									const isSelected = selectedVariantIndex === vIdx;
+									// Build label from attributes
+									const attrs = variant.attributes instanceof Map ? Object.fromEntries(variant.attributes) : (variant.attributes || {});
+									const label = Object.values(attrs).length > 0
+										? Object.values(attrs).join(" / ")
+										: `Variant ${vIdx + 1}`;
+									const outOfStock = variant.stock !== undefined && variant.stock <= 0;
+
+									return (
+										<button
+											key={variant._id || vIdx}
+											onClick={() => handleSelectVariant(vIdx)}
+											className={`variant-chip ${isSelected ? "active" : ""} ${outOfStock ? "out-of-stock" : ""}`}
+											title={outOfStock ? "Out of stock" : label}
+										>
+											{/* Show a mini swatch if variant has images */}
+											{variant.images && variant.images.length > 0 && (
+												<img
+													src={getDisplayImage(variant.images[0])}
+													alt={label}
+													className="variant-chip-swatch"
+												/>
+											)}
+											<span>{label}</span>
+											{outOfStock && <span className="variant-chip-oos">✕</span>}
+										</button>
+									);
+								})}
+							</div>
+
+							{/* Selected variant attribute details */}
+							{selectedVariant && attributeKeys.length > 0 && (
+								<div className="variant-detail-pills animate-fade-in-up">
+									{attributeKeys.map((key) => {
+										const val = getAttr(selectedVariant, key);
+										if (!val) return null;
+										return (
+											<div key={key} className="variant-detail-pill">
+												<span className="variant-detail-pill-key">{key}</span>
+												<span className="variant-detail-pill-val">{val}</span>
+											</div>
+										);
+									})}
+								</div>
+							)}
+
+							{/* Variant images mini gallery when variant is selected */}
+							{selectedVariant && selectedVariant.images && selectedVariant.images.length > 1 && (
+								<div className="flex gap-2 mt-2">
+									{selectedVariant.images.map((img, imgIdx) => (
+										<button
+											key={img._id || imgIdx}
+											onClick={() => handleSelectImage(imgIdx)}
+											className={`variant-mini-thumb ${activeImageIndex === imgIdx ? "active" : ""}`}
+										>
+											<img
+												src={getDisplayImage(img)}
+												alt={`Variant image ${imgIdx + 1}`}
+											/>
+										</button>
+									))}
+								</div>
+							)}
 						</div>
-					</div>
+					)}
 
 					{/* CTA Action Panel */}
 					<div className="flex gap-4">
 						<button
 							onClick={handleAddToBag}
-							disabled={isAdding}
+							disabled={isAdding || (hasVariants && selectedVariantIndex === null) || (activeStock !== undefined && activeStock <= 0)}
 							className="btn-premium-cta flex-1 flex items-center justify-center gap-3"
 						>
 							{isAdding ? (
@@ -400,6 +555,16 @@ const ProductDetails = () => {
 										className="text-zinc-100"
 									/>
 									<span>Added to Curation</span>
+								</>
+							) : hasVariants && selectedVariantIndex === null ? (
+								<>
+									<RiStackLine size={14} />
+									<span>Select a Variant</span>
+								</>
+							) : activeStock !== undefined && activeStock <= 0 ? (
+								<>
+									<RiCloseLine size={14} />
+									<span>Out of Stock</span>
 								</>
 							) : (
 								<>

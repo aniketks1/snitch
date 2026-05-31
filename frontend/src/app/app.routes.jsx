@@ -13,7 +13,9 @@ import Login from "../features/auth/pages/login/Login";
 import Register from "../features/auth/pages/register/Register";
 import Dashboard from "../features/dashboard/pages/Dashboard/Dashboard";
 import CreateProduct from "../features/dashboard/pages/CreateProduct/CreateProduct";
+import EditProduct from "../features/dashboard/pages/EditProduct/EditProduct";
 import ProductDetails from "../features/dashboard/pages/ProductDetails/ProductDetails";
+import Cart from "../features/cart/pages/Cart.jsx";
 import NotFound from "./pages/NotFound";
 
 const router = createBrowserRouter([
@@ -33,6 +35,10 @@ const router = createBrowserRouter([
 					{
 						path: "product/:productId",
 						element: <ProductDetails />,
+					},
+					{
+						path: "cart",
+						element: <Cart />,
 					},
 				],
 			},
@@ -78,6 +84,10 @@ const router = createBrowserRouter([
 					{
 						path: "create-product",
 						element: <CreateProduct />,
+					},
+					{
+						path: "edit-product/:productId",
+						element: <EditProduct />,
 					},
 				],
 			},

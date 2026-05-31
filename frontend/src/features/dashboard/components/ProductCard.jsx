@@ -11,11 +11,11 @@ const ProductCard = ({
 	className = "",
 	style
 }) => {
-	const { title = "Unnamed Product", description = "No description provided.", images = [] } = product;
+	const { title = "Unnamed Product", description = "No description provided.", images = [] } = product || {};
 
 	// Resolve price properties supporting both flat object keys and nested MongoDB schemas
-	const priceAmount = product.price?.amount ?? product.priceAmount ?? 0;
-	const priceCurrency = product.price?.currency ?? product.priceCurrency ?? "INR";
+	const priceAmount = Number(product?.price?.amount ?? product?.priceAmount ?? 0) || 0;
+	const priceCurrency = product?.price?.currency ?? product?.priceCurrency ?? "INR";
 
 	// Determine the main display image. Handles local File objects, backend URL objects, and raw strings.
 	const getDisplayImage = () => {
@@ -33,6 +33,7 @@ const ProductCard = ({
 	const displayImage = getDisplayImage();
 
 	const formatPrice = (amount, currency) => {
+		const num = Number(amount) || 0;
 		const symbol =
 			currency === "INR"
 				? "₹"
@@ -43,7 +44,7 @@ const ProductCard = ({
 						: currency === "GBP"
 							? "£"
 							: "";
-		return `${symbol}${amount.toLocaleString()}`;
+		return `${symbol}${num.toLocaleString()}`;
 	};
 
 	const CardContent = () => (
@@ -78,7 +79,7 @@ const ProductCard = ({
 			</div>
 
 			{/* Drop Details Area */}
-			<div className="flex flex-col p-4 pb-3 space-y-1.5 bg-white border-t border-zinc-100 flex-grow">
+			<div className="flex flex-col p-4 pb-3 space-y-1.5 bg-white border-t border-zinc-100 grow">
 				<div className="flex items-start justify-between gap-3">
 					<h4 className="text-xs font-semibold tracking-wide text-zinc-800 uppercase truncate flex-1" title={title}>
 						{title}

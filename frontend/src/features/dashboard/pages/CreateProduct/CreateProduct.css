@@ -219,3 +219,120 @@
   color: #18181b !important; /* zinc-900 */
 }
 
+/* ─── Variant Cards ─── */
+.variant-card {
+  background: #fafafa;
+  border: 1px solid rgba(228, 228, 231, 0.8);
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  transition: box-shadow 0.25s ease;
+}
+
+.variant-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+/* Add variant button */
+.variant-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #fafafa;
+  background: #18181b;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.variant-add-btn:hover {
+  background: #27272a;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.variant-add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Remove variant button */
+.variant-remove-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: 1px solid rgba(228, 228, 231, 0.8);
+  background: #ffffff;
+  color: #71717a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.variant-remove-btn:hover {
+  background: #e11d48;
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.15);
+}
+
+/* Attribute row inputs */
+.variant-attr-input {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.8125rem !important;
+  border-radius: 0.5rem !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(228, 228, 231, 1) !important;
+  color: #18181b !important;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.variant-attr-input::placeholder {
+  color: #a1a1aa !important;
+  font-weight: 300;
+}
+
+.variant-attr-input:focus {
+  border-color: #18181b !important;
+}
+
+/* Attribute delete button */
+.variant-attr-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 1px solid rgba(228, 228, 231, 0.8);
+  background: #ffffff;
+  color: #a1a1aa;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.variant-attr-delete:hover {
+  background: #e11d48;
+  border-color: transparent;
+  color: #ffffff;
+}
+
+/* Variant image dropzone (smaller) */
+.variant-img-dropzone {
+  min-height: auto;
+  border-style: dashed;
+}
+
+.variant-img-preview {
+  aspect-ratio: 1 / 1;
+  border-radius: 0.375rem;
+}
+

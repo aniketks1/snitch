@@ -10,8 +10,13 @@ import {
 	RiMoneyDollarCircleLine,
 	RiCheckLine,
 	RiErrorWarningLine,
+	RiAddLine,
+	RiDeleteBinLine,
+	RiStackLine,
 } from "@remixicon/react";
 import "./CreateProduct.css";
+
+const EMPTY_VARIANT = { stock: "", priceAmount: "", priceCurrency: "", attributes: [{ key: "", value: "" }] };
 
 const CreateProduct = () => {
 	const { handleCreateProduct } = useSellerProduct();
@@ -26,7 +31,12 @@ const CreateProduct = () => {
 	const [successMsg, setSuccessMsg] = useState("");
 	const [errorMsg, setErrorMsg] = useState("");
 
-	// Generate object URLs for images when they are selected
+	// --- Variants state ---
+	const [variants, setVariants] = useState([]);
+	const [variantImages, setVariantImages] = useState({}); // { [variantIndex]: File[] }
+	const [variantImagePreviews, setVariantImagePreviews] = useState({}); // { [variantIndex]: {id, name, url}[] }
+
+	// Generate object URLs for product images when they are selected
 	useEffect(() => {
 		if (images.length === 0) {
 			setImagePreviews([]);
@@ -46,6 +56,30 @@ const CreateProduct = () => {
 			objectUrls.forEach((preview) => URL.revokeObjectURL(preview.url));
 		};
 	}, [images]);
+
+	// Generate object URLs for variant images
+	useEffect(() => {
+		const newPreviews = {};
+		Object.entries(variantImages).forEach(([index, files]) => {
+			if (files && files.length > 0) {
+				newPreviews[index] = files.map((file) => ({
+					id: Math.random().toString(36).substring(2, 9),
+					name: file.name,
+					url: URL.createObjectURL(file),
+				}));
+			} else {
+				newPreviews[index] = [];
+			}
+		});
+
+		// Revoke old previews
+		Object.values(variantImagePreviews).forEach((previews) => {
+			previews?.forEach((p) => URL.revokeObjectURL(p.url));
+		});
+
+		setVariantImagePreviews(newPreviews);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [variantImages]);
 
 	const handleInputChange = (e) => {
 		const { name, value } = e.target;
@@ -115,6 +149,88 @@ const CreateProduct = () => {
 		}
 	};
 
+	// --- Variant handlers ---
+	const handleAddVariant = () => {
+		setVariants((prev) => [...prev, { ...EMPTY_VARIANT, attributes: [{ key: "", value: "" }] }]);
+	};
+
+	const handleRemoveVariant = (indexToRemove) => {
+		setVariants((prev) => prev.filter((_, i) => i !== indexToRemove));
+		setVariantImages((prev) => {
+			const next = {};
+			// Re-index remaining variants
+			Object.keys(prev).forEach((key) => {
+				const k = Number(key);
+				if (k < indexToRemove) next[k] = prev[k];
+				else if (k > indexToRemove) next[k - 1] = prev[k];
+			});
+			return next;
+		});
+	};
+
+	const handleVariantChange = (variantIndex, field, value) => {
+		setVariants((prev) => prev.map((v, i) => (i === variantIndex ? { ...v, [field]: value } : v)));
+	};
+
+	const handleVariantAttributeChange = (variantIndex, attrIndex, field, value) => {
+		setVariants((prev) =>
+			prev.map((v, i) => {
+				if (i !== variantIndex) return v;
+				const newAttrs = v.attributes.map((a, ai) => (ai === attrIndex ? { ...a, [field]: value } : a));
+				return { ...v, attributes: newAttrs };
+			}),
+		);
+	};
+
+	const handleAddAttribute = (variantIndex) => {
+		setVariants((prev) =>
+			prev.map((v, i) => (i === variantIndex ? { ...v, attributes: [...v.attributes, { key: "", value: "" }] } : v)),
+		);
+	};
+
+	const handleRemoveAttribute = (variantIndex, attrIndex) => {
+		setVariants((prev) =>
+			prev.map((v, i) => (i === variantIndex ? { ...v, attributes: v.attributes.filter((_, ai) => ai !== attrIndex) } : v)),
+		);
+	};
+
+	const handleVariantFileSelect = (variantIndex, e) => {
+		if (e.target.files && e.target.files[0]) {
+			const filesArray = Array.from(e.target.files);
+			addVariantFiles(variantIndex, filesArray);
+		}
+	};
+
+	const addVariantFiles = (variantIndex, files) => {
+		const imageFiles = files.filter((f) => f.type.startsWith("image/"));
+		if (imageFiles.length > 0) {
+			setVariantImages((prev) => ({
+				...prev,
+				[variantIndex]: [...(prev[variantIndex] || []), ...imageFiles].slice(0, 5),
+			}));
+		}
+	};
+
+	const handleVariantDrop = (variantIndex, e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+			addVariantFiles(variantIndex, Array.from(e.dataTransfer.files));
+		}
+	};
+
+	const handleVariantDragOver = (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+	};
+
+	const handleRemoveVariantImage = (variantIndex, imageIndex) => {
+		setVariantImages((prev) => ({
+			...prev,
+			[variantIndex]: (prev[variantIndex] || []).filter((_, i) => i !== imageIndex),
+		}));
+	};
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		setErrorMsg("");
@@ -133,9 +249,26 @@ const CreateProduct = () => {
 			return;
 		}
 
+		// Validate variants
+		for (let i = 0; i < variants.length; i++) {
+			const v = variants[i];
+			if (!v.priceAmount || isNaN(Number(v.priceAmount))) {
+				setErrorMsg(`Variant ${i + 1}: Please enter a valid price amount.`);
+				return;
+			}
+		}
+
 		setIsSubmitting(true);
 
 		try {
+			// Build variant data for API (convert attributes array → object map)
+			const variantData = variants.map((v) => ({
+				stock: Number(v.stock) || 0,
+				priceAmount: Number(v.priceAmount),
+				priceCurrency: v.priceCurrency || formData.priceCurrency,
+				attributes: Object.fromEntries(v.attributes.filter((a) => a.key.trim()).map((a) => [a.key, a.value])),
+			}));
+
 			// Call the seller product service logic
 			await handleCreateProduct({
 				title: formData.title,
@@ -143,6 +276,8 @@ const CreateProduct = () => {
 				priceAmount: Number(formData.priceAmount),
 				priceCurrency: formData.priceCurrency,
 				images: images,
+				variants: variantData.length > 0 ? variantData : undefined,
+				variantImages: Object.keys(variantImages).length > 0 ? variantImages : undefined,
 			});
 
 			setSuccessMsg("Product successfully designed and launched to collections!");
@@ -154,6 +289,8 @@ const CreateProduct = () => {
 				priceCurrency: "INR",
 			});
 			setImages([]);
+			setVariants([]);
+			setVariantImages({});
 
 			// Automatically redirect back to main dashboard after some duration to feel high-end
 			setTimeout(() => {
@@ -390,6 +527,216 @@ const CreateProduct = () => {
 							Launch Drop Item
 						</Button>
 					</div>
+				</div>
+
+				{/* PART 3: VARIANTS */}
+				<div className="lg:col-span-12 space-y-6 premium-card p-6 sm:p-8">
+					<div className="flex items-center justify-between pb-4 border-b border-zinc-200 mb-2">
+						<div className="flex items-center">
+							<span className="section-badge">3</span>
+							<h3 className="text-sm font-semibold tracking-wider text-zinc-800 uppercase">
+								Variants
+							</h3>
+							<span className="ml-3 text-[10px] font-light text-zinc-400 uppercase tracking-wider">
+								Optional
+							</span>
+						</div>
+						<button
+							type="button"
+							onClick={handleAddVariant}
+							disabled={isSubmitting}
+							className="variant-add-btn"
+						>
+							<RiAddLine size={14} />
+							<span>Add Variant</span>
+						</button>
+					</div>
+
+					{variants.length === 0 && (
+						<div className="flex flex-col items-center justify-center py-10 text-center">
+							<div className="p-4 rounded-full bg-zinc-50 border border-zinc-200 mb-4 text-zinc-400">
+								<RiStackLine size={24} />
+							</div>
+							<p className="text-xs text-zinc-500 font-light max-w-xs">
+								Add size, colour, or material variants with independent stock, pricing, and imagery.
+							</p>
+						</div>
+					)}
+
+					{variants.map((variant, vIndex) => (
+						<div
+							key={vIndex}
+							className="variant-card animate-fade-in-up"
+						>
+							{/* Variant header */}
+							<div className="flex items-center justify-between pb-3 mb-4 border-b border-zinc-100">
+								<p className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+									Variant {vIndex + 1}
+								</p>
+								<button
+									type="button"
+									className="variant-remove-btn"
+									onClick={() => handleRemoveVariant(vIndex)}
+									title="Remove variant"
+								>
+									<RiDeleteBinLine size={14} />
+								</button>
+							</div>
+
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+								{/* Left: fields */}
+								<div className="space-y-4">
+									{/* Stock */}
+									<Input
+										label="Stock Quantity"
+										type="number"
+										id={`variant-stock-${vIndex}`}
+										name="stock"
+										value={variant.stock}
+										onChange={(e) => handleVariantChange(vIndex, "stock", e.target.value)}
+										placeholder="e.g. 50"
+										disabled={isSubmitting}
+									/>
+
+									{/* Price override */}
+									<div className="grid grid-cols-3 gap-3">
+										<div className="col-span-2">
+											<Input
+												label="Variant Price"
+												type="text"
+												id={`variant-price-${vIndex}`}
+												name="priceAmount"
+												value={variant.priceAmount}
+												onChange={(e) => handleVariantChange(vIndex, "priceAmount", e.target.value)}
+												placeholder="e.g. 6499"
+												required={true}
+												disabled={isSubmitting}
+												icon={RiMoneyDollarCircleLine}
+											/>
+										</div>
+										<div>
+											<label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">
+												Currency
+											</label>
+											<select
+												value={variant.priceCurrency || formData.priceCurrency}
+												onChange={(e) => handleVariantChange(vIndex, "priceCurrency", e.target.value)}
+												className="form-input premium-select w-full pl-3! bg-white cursor-pointer text-sm outline-none"
+												disabled={isSubmitting}
+											>
+												<option value="INR">INR</option>
+												<option value="USD">USD</option>
+												<option value="EUR">EUR</option>
+												<option value="GBP">GBP</option>
+											</select>
+										</div>
+									</div>
+
+									{/* Attributes */}
+									<div>
+										<div className="flex items-center justify-between mb-2">
+											<label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+												Attributes
+											</label>
+											<button
+												type="button"
+												onClick={() => handleAddAttribute(vIndex)}
+												className="text-[10px] font-semibold text-zinc-500 hover:text-zinc-900 uppercase tracking-wider transition-colors"
+												disabled={isSubmitting}
+											>
+												+ Add
+											</button>
+										</div>
+										<div className="space-y-2">
+											{variant.attributes.map((attr, aIndex) => (
+												<div
+													key={aIndex}
+													className="flex items-center gap-2"
+												>
+													<input
+														type="text"
+														placeholder="Key (e.g. Size)"
+														value={attr.key}
+														onChange={(e) => handleVariantAttributeChange(vIndex, aIndex, "key", e.target.value)}
+														className="form-input variant-attr-input flex-1"
+														disabled={isSubmitting}
+													/>
+													<input
+														type="text"
+														placeholder="Value (e.g. XL)"
+														value={attr.value}
+														onChange={(e) => handleVariantAttributeChange(vIndex, aIndex, "value", e.target.value)}
+														className="form-input variant-attr-input flex-1"
+														disabled={isSubmitting}
+													/>
+													{variant.attributes.length > 1 && (
+														<button
+															type="button"
+															onClick={() => handleRemoveAttribute(vIndex, aIndex)}
+															className="variant-attr-delete"
+															title="Remove attribute"
+														>
+															<RiCloseLine size={12} />
+														</button>
+													)}
+												</div>
+											))}
+										</div>
+									</div>
+								</div>
+
+								{/* Right: variant images */}
+								<div className="space-y-3">
+									<label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+										Variant Images
+									</label>
+									<div
+										className="uploader-dropzone variant-img-dropzone p-5 flex flex-col items-center justify-center cursor-pointer"
+										onDragOver={handleVariantDragOver}
+										onDrop={(e) => handleVariantDrop(vIndex, e)}
+										onClick={() => {
+											const input = document.createElement("input");
+											input.type = "file";
+											input.multiple = true;
+											input.accept = "image/*";
+											input.onchange = (e) => handleVariantFileSelect(vIndex, e);
+											input.click();
+										}}
+									>
+										<RiImageAddLine
+											size={16}
+											className="text-zinc-400 mb-1.5"
+										/>
+										<p className="text-[10px] text-zinc-500 font-light">Drop or click to add images</p>
+									</div>
+
+									{variantImagePreviews[vIndex]?.length > 0 && (
+										<div className="grid grid-cols-4 gap-2">
+											{variantImagePreviews[vIndex].map((preview, imgIdx) => (
+												<div
+													key={preview.id}
+													className="image-preview-card variant-img-preview group"
+												>
+													<img
+														src={preview.url}
+														alt={`Variant ${vIndex + 1} image ${imgIdx + 1}`}
+													/>
+													<button
+														type="button"
+														className="btn-delete-preview"
+														onClick={() => handleRemoveVariantImage(vIndex, imgIdx)}
+														title="Remove image"
+													>
+														<RiCloseLine size={10} />
+													</button>
+												</div>
+											))}
+										</div>
+									)}
+								</div>
+							</div>
+						</div>
+					))}
 				</div>
 			</form>
 		</div>

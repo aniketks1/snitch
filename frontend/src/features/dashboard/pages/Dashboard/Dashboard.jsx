@@ -1,11 +1,11 @@
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import ProductCard from "../../components/ProductCard.jsx";
 import { RiShoppingBag3Line, RiVerifiedBadgeLine, RiArrowRightUpLine } from "@remixicon/react";
 import { useSelector } from "react-redux";
 
 const Dashboard = () => {
-	// Custom Hooks
-	const { sellerProducts } = useSelector((state) => state.products); // sellerProduct is slice/state & sellerProducts is array
+	const { sellerProducts } = useSelector((state) => state.products);
+	const navigate = useNavigate();
 
 	return (
 		<div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 animate-fade-in-up">
@@ -60,7 +60,7 @@ const Dashboard = () => {
 								key={product._id}
 								product={product}
 								isSellerMode={true}
-								onEdit={(prod) => alert(`Editing product drop: "${prod.title}"`)}
+								onEdit={(prod) => navigate(`/dashboard/edit-product/${prod._id}`)}
 								onDelete={(prod) => {
 									if (
 										window.confirm(

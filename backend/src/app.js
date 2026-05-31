@@ -11,6 +11,7 @@ import config from "./config/config.js";
  */
 import authRouter from "./routes/auth.route.js";
 import productRoute from "./routes/product.route.js";
+import cartRouter from "./routes/cart.route.js";
 
 const app = express();
 
@@ -26,10 +27,10 @@ app.use(
 	cors({
 		credentials: true,
 		origin: config.FRONTEND_URL,
-		methods: ["GET", "POST", "PUT", "DELETE"],
+		methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
 		// allowedHeaders: ["Content-Type", "Authorization"],
 	}),
-);		
+);
 
 passport.use(
 	new GoogleStrategy(
@@ -50,6 +51,7 @@ passport.use(
  */
 app.use("/api/auth", authRouter);
 app.use("/api/product", productRoute);
+app.use("/api/cart", cartRouter);
 
 app.get("/health", (req, res) => {
 	res.status(200).json({

@@ -389,3 +389,125 @@
 .animate-slide-left {
 	animation: slideInLeft 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ─── Variant Chip Selector ─── */
+.variant-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 1rem;
+	font-size: 0.75rem;
+	font-weight: 500;
+	letter-spacing: 0.05em;
+	border: 1px solid rgba(228, 228, 231, 0.8);
+	border-radius: 9999px;
+	background-color: #ffffff;
+	color: #18181b;
+	cursor: pointer;
+	transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.variant-chip:hover {
+	border-color: #18181b;
+	background-color: #fafafa;
+}
+
+.variant-chip.active {
+	background-color: #09090b;
+	color: #ffffff;
+	border-color: #09090b;
+	box-shadow: 0 4px 12px rgba(9, 9, 11, 0.15);
+}
+
+.variant-chip.out-of-stock {
+	opacity: 0.45;
+	cursor: not-allowed;
+	text-decoration: line-through;
+}
+
+.variant-chip.out-of-stock.active {
+	background-color: #71717a;
+	border-color: #71717a;
+}
+
+.variant-chip-oos {
+	font-size: 0.625rem;
+	color: #e11d48;
+	font-weight: 700;
+}
+
+.variant-chip.active .variant-chip-oos {
+	color: #fca5a5;
+}
+
+/* Variant swatch image inside chip */
+.variant-chip-swatch {
+	width: 1.25rem;
+	height: 1.25rem;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 1px solid rgba(228, 228, 231, 0.8);
+	flex-shrink: 0;
+}
+
+.variant-chip.active .variant-chip-swatch {
+	border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Variant detail attribute pills */
+.variant-detail-pills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.variant-detail-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0.375rem 0.75rem;
+	border-radius: 0.5rem;
+	background: #f4f4f5;
+	border: 1px solid rgba(228, 228, 231, 0.6);
+	font-size: 0.6875rem;
+}
+
+.variant-detail-pill-key {
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: #71717a;
+}
+
+.variant-detail-pill-val {
+	font-weight: 500;
+	color: #18181b;
+}
+
+/* Variant mini thumbnail gallery */
+.variant-mini-thumb {
+	width: 2.75rem;
+	height: 2.75rem;
+	border-radius: 0.375rem;
+	overflow: hidden;
+	border: 1px solid rgba(228, 228, 231, 0.8);
+	cursor: pointer;
+	transition: all 0.25s ease;
+	flex-shrink: 0;
+}
+
+.variant-mini-thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.variant-mini-thumb:hover {
+	border-color: #a1a1aa;
+}
+
+.variant-mini-thumb.active {
+	border-color: #09090b;
+	border-width: 2px;
+	box-shadow: 0 2px 8px rgba(9, 9, 11, 0.1);
+}
